@@ -8,7 +8,7 @@ contract SimpleBank {
     /* Fill in the keyword. Hint: We want to protect our users balance from other contracts*/
     mapping (address => uint) private balances;
     
-    /* Fill in the keyword. We want to create a getter function and allow contracts to be able to see 		if a user is enrolled.  */
+    /* Fill in the keyword. We want to create a getter function and allow contracts to be able to see if a user is enrolled.  */
     mapping (address => bool) public enrolled;
 
     /* Let's make sure everyone knows who owns the bank. Use the appropriate keyword for this*/
@@ -22,14 +22,11 @@ contract SimpleBank {
     event LogEnrolled(address indexed accountAddress);
 
     /* Add 2 arguments for this event, an accountAddress and an amount */
-    event LogDepositMade(address indexed accountAddress, uint indexed depositAmount);
+    event LogDepositMade(address indexed accountAddress, uint indexed amount);
 
     /* Create an event called LogWithdrawal */
     /* Add 3 arguments for this event, an accountAddress, withdrawAmount and a newBalance */
     event LogWithdrawal(address indexed accountAddress, uint indexed withdrawAmount, uint indexed newBalance);
-
-    event LogTrace(uint x);	
-
 
     //
     // Functions
@@ -39,27 +36,23 @@ contract SimpleBank {
     constructor() public {
         /* Set the owner to the creator of this contract */
 	owner = msg.sender;
-	emit LogTrace(1);
+	
     }
 
     /// @notice Get balance
     /// @return The balance of the user
     // A SPECIAL KEYWORD prevents function from editing state variables;
-    // allows function to run locally/off blockchain. WHAT IS THIS ?
+    // allows function to run locally/off blockchain.
     function balance() 
 	public 
 	view
 	returns (uint) {
         /* Get the balance of the sender of this transaction */
 
-	require(enrolled[msg.sender]); // validating that the user is enrolled.
-	
-	//emit LogTrace(2);
-
+	require(enrolled[msg.sender] == true); // validating that the user is enrolled.
+		
 	return balances[msg.sender];
 	
-	//return 2;
-
     }
 
     /// @notice Enroll a customer with the bank
@@ -71,15 +64,15 @@ contract SimpleBank {
 
 	enrolled[msg.sender] = true;
 
-	bool test = enrolled[msg.sender];
-
 	balances[msg.sender] = 0;
 
 	emit LogEnrolled(msg.sender);
 
-	return true;
+	return enrolled[msg.sender];
 
     }
+
+	
 
     /// @notice Deposit ether into bank
     /// @return The balance of the user after the deposit is made
@@ -93,11 +86,11 @@ contract SimpleBank {
         /* Add the amount to the user's balance, call the event associated with a deposit,
           then return the balance of the user */
 	
-	require(enrolled[msg.sender]); // validate that the user is enrolled.
-
-	emit LogDepositMade(msg.sender, msg.value);
+	//require(enrolled[msg.sender] == true); // validate that the user is enrolled.
 
 	balances[msg.sender] += msg.value;
+
+	emit LogDepositMade(msg.sender, msg.value);
 
 	return balances[msg.sender];
 	
@@ -117,11 +110,9 @@ contract SimpleBank {
 
 	require(enrolled[msg.sender]); // validate the user.
 	require(withdrawAmount > 0); 	// validate withdraw amount to be greater than zero
-	require((balances[msg.sender] == withdrawAmount) || (balances[msg.sender] > withdrawAmount));
+	require(balances[msg.sender] >= withdrawAmount);
 
 	balances[msg.sender] -= withdrawAmount;
-
-	// how do i send ether ?
 
 	emit LogWithdrawal(msg.sender, withdrawAmount, balances[msg.sender]);
 
@@ -135,7 +126,8 @@ contract SimpleBank {
     // Typically, called when invalid data is sent
     // Added so ether sent to this contract is reverted if the contract fails
     // otherwise, the sender's money is transferred to contract
-    function() external payable {
+    function() external {
         revert();
+	
     }
 }
